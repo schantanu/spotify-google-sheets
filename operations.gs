@@ -511,6 +511,8 @@ function editPlaylistTracks(action, playlistId, tracks, position) {
     const isSavedTracks = playlistId === CONFIG.api.savedTracksId;
     const savedTracksChunkSize = CONFIG.api.savedTracksChunkSize;
     const savedTracksTimeSleep = CONFIG.api.savedTracksTimeSleep;
+    const chunkSize = CONFIG.api.chunkSize;
+    const timeSleep = CONFIG.api.timeSleep;
 
     // Handle saved tracks operations
     if (isSavedTracks) {
@@ -544,12 +546,22 @@ function editPlaylistTracks(action, playlistId, tracks, position) {
 
     // Handle regular playlist operations
     const endpoint = `/playlists/${playlistId}/tracks`;
-    const method = action === 'ADD' ? 'POST' : 'DELETE';
-    const data = action === 'ADD'
-      ? { uris: tracks.map(id => `spotify:track:${id}`), ...(typeof position === 'number' && { position }) }
-      : { tracks: tracks.map(id => ({ uri: `spotify:track:${id}` })) };
+    for(let i = 0; i < tracks.length; i += chunkSize) {
+      const chunk = tracks.slice(i, i + chunkSize);
 
-    return makeSpotifyRequest({endpoint, method, data});
+      const data = action === 'ADD'
+        ? { uris: chunk.map(id => `spotify:track:${id}`), position: typeof position === 'number' ? position + i : undefined }
+        : { tracks: chunk.map(id => ({ uri: `spotify:track:${id}` })) };
+
+      makeSpotifyRequest({
+        endpoint,
+        method: action === 'ADD' ? 'POST' : 'DELETE',
+        data
+      });
+      Utilities.sleep(timeSleep);
+    }
+
+    return { success: true };
   } catch (error) {
     Logger.log(`Error with editing playlist tracks:\n${error.stack}`);
     throw error;
@@ -557,34 +569,62 @@ function editPlaylistTracks(action, playlistId, tracks, position) {
 }
 
 /**
- * Reorders entire playlist to match sheet order
- * @param {string} playlistId - Spotify playlist ID
- * @param {Array<string>} tracksOrder - Array of track IDs in desired order
- */
+* Reorders tracks within a playlist handling duplicates efficiently
+* @param {string} playlistId - Spotify playlist ID
+* @param {Array<string>} tracksOrder - Desired track order
+* @see {@link https://developer.spotify.com/documentation/web-api/reference/reorder-or-replace-playlists-tracks Update playlist items}
+*/
 function reorderPlaylistTracks(playlistId, tracksOrder) {
   try {
-    const chunkSize = CONFIG.api.chunkSize;
     const timeSleep = CONFIG.api.timeSleep;
+    const chunkSize = CONFIG.api.chunkSize;
 
-    Logger.log('Reordering playlist.');
+    // Get current track positions including duplicates
+    let currentPositions = getPlaylistItems(playlistId)
+      .map((id, index) => ({ id, index }));
 
-    // Process in chunks for Spotify's API limit
-    for (let i = 0; i < tracksOrder.length; i += chunkSize) {
-      const chunk = tracksOrder.slice(i, i + chunkSize);
+    // Find minimum moves needed for reordering
+    const moves = [];
+    let processedIndices = new Set();
 
-      makeSpotifyRequest({
-        endpoint: `/playlists/${playlistId}/tracks?offset=${i}`,
-        method: 'PUT',
-        data: {
-          uris: chunk.map(id => `spotify:track:${id}`)
-        }
+    tracksOrder.forEach((trackId, targetIndex) => {
+      if (processedIndices.has(targetIndex)) return;
+
+      // Find first unprocessed occurrence of this track
+      const currentPos = currentPositions.findIndex((pos, i) =>
+        pos.id === trackId && !processedIndices.has(i)
+      );
+
+      if (currentPos !== targetIndex) {
+        moves.push({
+          range_start: currentPos,
+          insert_before: targetIndex,
+          range_length: 1
+        });
+
+        // Update tracking array
+        const [movedTrack] = currentPositions.splice(currentPos, 1);
+        currentPositions.splice(targetIndex, 0, movedTrack);
+      }
+
+      processedIndices.add(targetIndex);
+    });
+
+    // Execute moves in chunks
+    for(let i = 0; i < moves.length; i += chunkSize) {
+      const chunk = moves.slice(i, i + chunkSize);
+
+      chunk.forEach(move => {
+        makeSpotifyRequest({
+          endpoint: `/playlists/${playlistId}/tracks`,
+          method: 'PUT',
+          data: move
+        });
+        Utilities.sleep(timeSleep);
       });
-
-      // Rate limiting pause
-      Utilities.sleep(timeSleep);
     }
   } catch (error) {
-    Logger.log(`Error with reordering playlist:\n${error.stack}`);
+    Logger.log(`Error reordering playlist:\n${error.stack}`);
     throw error;
   }
 }
@@ -725,9 +765,19 @@ function updatePlaylist(playlistId) {
 
     // Reorder if needed (skip for saved tracks)
     if (!isSavedTracks) {
-      const needsReorder = sheetTrackIds.some((id, i) => spotifyTrackIds[i] !== id);
-      if (needsReorder) {
+      // Get fresh state after any adds/removes
+      const currentSpotifyTracks = getPlaylistItems(playlistId);
+      Logger.log(`Current Spotify Tracks ${currentSpotifyTracks.length}`);
+
+      // Only reorder if track order differs
+      const currentOrder = currentSpotifyTracks.join(',');
+      const desiredOrder = sheetTrackIds.join(',');
+
+      if (currentOrder !== desiredOrder) {
+        Logger.log('Track order differs - reordering needed');
         reorderPlaylistTracks(playlistId, sheetTrackIds);
+      } else {
+        Logger.log('Track order matches - no reordering needed');
       }
     }
 

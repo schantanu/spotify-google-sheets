@@ -1,0 +1,1010 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+      .spinner {
+        animation: spin 1s linear infinite;
+        display: inline-block;
+      }
+
+      @keyframes spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+      }
+
+      .button-text, .spinner {
+        transition: opacity 0.15s ease-in-out;
+      }
+
+      /* Playlist item styling */
+      .compact-playlist-item {
+        padding: 8px 16px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+
+      .compact-playlist-item img {
+        width: 32px;
+        height: 32px;
+        border-radius: 4px;
+        object-fit: cover;
+      }
+
+      .compact-playlist-info {
+        flex: 1;
+        min-width: 0;
+      }
+
+      /* Animation classes */
+      .playlist-expanded {
+        max-height: 200px !important;
+      }
+
+      .icon-rotated {
+        transform: rotate(-180deg);
+      }
+
+      /* Button interactions */
+      .compact-playlist-item button {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: none;
+        border: none;
+        padding: 4px;
+        cursor: pointer;
+        transition: color 0.2s;
+      }
+
+      .compact-playlist-item button:hover {
+        color: #e11d48;
+      }
+
+      /* Disabled button state */
+      .btn-disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+      }
+
+      .selected-playlists-header {
+        background-color: #f3f4f6;
+        border-bottom: 2px solid #e5e7eb;
+        box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+      }
+
+      .selected-playlists-container {
+        background-color: #ffffff;
+        border-radius: 0.5rem;
+        margin: 0.5rem;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+      }
+
+      /* .spinner {
+        animation: spin 1s linear infinite;
+      } */
+
+      /* @keyframes spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+      } */
+    </style>
+  </head>
+  <body class="bg-gray-50">
+
+    <!-- Main container -->
+    <div class="flex flex-col h-screen">
+
+      <!-- Header Section -->
+      <div class="flex-none p-4 space-y-4">
+
+        <!-- Back button -->
+        <div class="flex-none">
+          <button onclick="showPlaylistsManager()"
+                  class="w-full flex items-center justify-center px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 relative">
+            <span class="button-text">← Back to Playlists Manager</span>
+            <svg class="spinner hidden w-5 h-5 absolute" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+              <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+            </svg>
+          </button>
+        </div>
+
+        <hr>
+
+        <div>
+          <div class="mb-4">
+            <!-- Title -->
+            <h2 class="text-xl font-semibold text-gray-900 mb-2">Download Playlists</h2>
+            <p class="mb-3 text-sm text-gray-600">Export playlists to Google Sheets to view and manage track details.</p>
+
+            <!-- Quick Guide -->
+            <div class="rounded-md bg-white border border-gray-200">
+              <!-- Header -->
+              <div class="flex items-center justify-between p-3 cursor-pointer"
+                  onclick="toggleGuide()">
+                <h6 class="font-medium text-gray-900">Quick Guide</h6>
+                <svg id="guide-chevron"
+                    class="w-5 h-5 text-gray-500 transform transition-transform duration-200"
+                    fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M19 9l-7 7-7-7" />
+                </svg>
+              </div>
+
+              <!-- Content -->
+              <div id="guide-content" class="overflow-hidden transition-all duration-200 max-h-0">
+                <div class="px-4 pb-4">
+                  <ol class="text-sm text-gray-600 list-disc ml-4 space-y-1 mb-4">
+                    <li>Select playlist type</li>
+                    <li>Search to filter list</li>
+                    <li>Choose playlists to export</li>
+                    <li>Click "Download Selected Playlists"</li>
+                    <li>View playlist tracks in new sheet</li>
+                  </ol>
+
+                  <!-- Notes -->
+                  <div class="space-y-2">
+                    <p class="text-xs text-gray-500 italic">Excludes Spotify algorithmic/editorial playlists.</p>
+                    <p class="text-xs text-gray-500 italic">To download specific Public Playlists, get the playlist id from Spotify and search using: 'playlist_id: ID' (replace 'ID' with playlist ID)</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <hr>
+
+          <!-- Playlist Type Selector -->
+          <div class="relative w-full mt-4 mb-3">
+            <button id="dropdown-button"
+                    onclick="toggleDropdown()"
+                    class="w-full flex items-center justify-between px-3 py-1.5 text-sm border rounded hover:border-gray-400 focus:ring-1 focus:ring-blue-500 bg-white">
+              <span id="selected-value">My Playlists</span>
+              <svg class="w-4 h-4 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path d="M19 9l-7 7-7-7"/>
+              </svg>
+            </button>
+
+            <div id="dropdown-menu"
+                  class="hidden absolute z-10 w-full mt-1 bg-white border rounded shadow-lg">
+              <div class="py-1">
+                <a href="#"
+                    onclick="handleTypeChange('user')"
+                    class="block px-4 py-2 text-sm hover:bg-gray-100">My Playlists</a>
+                <a href="#"
+                    onclick="handleTypeChange('public')"
+                    class="block px-4 py-2 text-sm hover:bg-gray-100">Public Playlists</a>
+              </div>
+            </div>
+          </div>
+
+          <!-- Search Input -->
+          <div class="relative">
+            <input type="text"
+                    id="search-input"
+                    placeholder="Search playlists..."
+                    onkeyup="handleSearch(this.value)"
+                    class="w-full pl-3 pr-8 py-1.5 text-sm border rounded focus:ring-1 focus:ring-blue-500">
+            <button onclick="clearSearch()"
+                    class="absolute right-2 top-1/2 -translate-y-1/2 p-1 rounded-full hover:bg-gray-100 transition-colors">
+              <svg class="w-4 h-4 text-gray-400 hover:text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <hr>
+
+      <!-- Selected playlists section -->
+      <div id="selected-playlists-section" class="border-b border-gray-200">
+        <div class="px-4 py-2 bg-gray-50 flex items-center justify-between cursor-pointer" onclick="toggleSelectedPlaylists()">
+          <div class="flex items-center space-x-2">
+            <h6 class="text-sm font-medium text-gray-900">Selected Playlists</h6>
+            <span class="text-xs text-gray-500" id="selected-count-badge"></span>
+          </div>
+          <svg id="collapse-icon" class="h-4 w-4 text-gray-500 transform transition-transform duration-200" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+            <path class="expanded-icon" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+            <path class="collapsed-icon hidden" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 15l7-7 7 7" />
+          </svg>
+        </div>
+
+        <div id="selected-playlists-container" class="overflow-y-auto transition-all duration-200" style="max-height: 0px;">
+          <div class="divide-y divide-gray-100">
+              <!-- Selected playlists will be rendered here -->
+          </div>
+        </div>
+      </div>
+
+      <!-- Content Area -->
+      <div class="flex-1 overflow-y-auto">
+        <div id="content-area" class="h-full">
+          <div id="loading-state" class="text-center py-8 text-gray-500">
+            Loading playlists...
+          </div>
+          <div id="playlist-container" class="divide-y divide-gray-200 hidden"></div>
+        </div>
+      </div>
+
+      <!-- Footer -->
+      <div class="flex-none p-4 border-t border-gray-200 bg-white">
+        <button id="download-button"
+                onclick="downloadSelectedPlaylists()"
+                class="w-full px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 btn-disabled"
+                disabled>
+            Download Selected Playlists
+        </button>
+      </div>
+
+      <!-- Status Modal -->
+      <div id="status-modal" class="fixed inset-0 z-50 hidden overflow-auto bg-black bg-opacity-50 flex justify-center" style="padding-top: 400px;">
+        <div class="bg-white mx-4 p-4 rounded shadow-lg max-w-full h-fit">
+          <h3 class="text-md font-medium mb-2 text-center">Status</h3>
+          <div id="modal-content" class="text-sm text-gray-600 mb-3">
+            <!-- Status content -->
+          </div>
+          <div id="modal-actions" class="flex justify-end gap-2">
+            <button onclick="closeStatusModal()"
+                    class="w-full px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2">
+              Close
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      // ===== Core State & Initialization =====
+      // Manages global application state
+      const state = {
+        allPlaylists: [],
+        selectedPlaylists: new Set(),
+        selectedPlaylistsCache: new Map(),
+        currentSearchTimeout: null,
+        isLoading: false,
+        currentOffset: 0,
+        hasMorePlaylists: true,
+        isLoadingMore: false,
+        isDownloadCancelled: false,
+        pendingDownloads: new Set()
+      };
+
+      // Initialize event handlers for the application
+      function initializeEventHandlers() {
+        // Close dropdown when clicking outside
+        document.addEventListener('click', (event) => {
+          if (!event.target.closest('#dropdown-button')) {
+            document.getElementById('dropdown-menu').classList.add('hidden');
+          }
+        });
+      }
+
+      // Initializes the application on page load
+      window.onload = function() {
+        // Initialize event handlers
+        initializeEventHandlers();
+
+        // Initialize app state
+        showLoading();
+        loadPlaylists('user');
+        updateSelectedPlaylistsDisplay();
+        updateDownloadButtonState();
+      };
+
+      // =====  UI Controls =====
+      // Toggle guide
+      function toggleGuide() {
+        const content = document.getElementById('guide-content');
+        const chevron = document.getElementById('guide-chevron');
+
+        // Toggle content visibility
+        if (content.style.maxHeight === '0px' || !content.style.maxHeight) {
+          content.style.maxHeight = content.scrollHeight + 'px';
+          chevron.classList.add('rotate-180');
+        } else {
+          content.style.maxHeight = '0px';
+          chevron.classList.remove('rotate-180');
+        }
+      }
+
+      // Toggles the playlist type dropdown visibility
+      function toggleDropdown() {
+        document.getElementById('dropdown-menu').classList.toggle('hidden');
+      }
+
+      // Shows the loading spinner and hides playlist container
+      function showLoading() {
+        document.getElementById('loading-state').style.display = 'block';
+        document.getElementById('playlist-container').classList.add('hidden');
+      }
+
+      // Hides loading spinner and shows playlist container
+      function hideLoading() {
+        document.getElementById('loading-state').style.display = 'none';
+        document.getElementById('playlist-container').classList.remove('hidden');
+      }
+
+      // Displays error message in the content area
+      function showError(message) {
+        const contentArea = document.getElementById('content-area');
+        contentArea.innerHTML = `
+          <div class="text-center py-8 text-red-500">${message}</div>
+        `;
+      }
+
+      // Updates dropdown button state based on loading status
+      function updateControls() {
+        const dropdownButton = document.getElementById('dropdown-button');
+        dropdownButton.disabled = state.isLoading;
+        dropdownButton.classList.toggle('opacity-50', state.isLoading);
+        dropdownButton.classList.toggle('cursor-not-allowed', state.isLoading);
+      }
+
+      // Resets UI controls to enabled state
+      function resetUI() {
+        const controls = [
+          document.getElementById('download-button'),
+          document.getElementById('dropdown-button'),
+          document.getElementById('search-input')
+        ];
+
+        controls.forEach(el => {
+          if (el) {
+            el.disabled = false;
+            el.classList.remove('opacity-50', 'cursor-not-allowed');
+          }
+        });
+      }
+
+      // Resets form and clears playlist selections
+      function resetFormState() {
+        // Clear selections from UI
+        document.querySelectorAll('[data-selected="true"]').forEach(item => {
+          item.dataset.selected = 'false';
+          item.classList.remove('bg-blue-50', 'border-l-4', 'border-blue-500');
+          const checkIcon = item.querySelector('.check-icon');
+          if (checkIcon) checkIcon.classList.add('hidden');
+        });
+
+        // Reset search and dropdown
+        document.getElementById('search-input').value = '';
+        document.getElementById('selected-value').textContent = 'My Playlists';
+
+        // Clear state
+        state.selectedPlaylists.clear();
+        state.selectedPlaylistsCache.clear();
+        state.currentOffset = 0;
+        state.hasMorePlaylists = true;
+
+        // Reset UI elements
+        updateSelectedPlaylistsDisplay();
+        updateDownloadButtonState();
+        closeStatusModal();
+        resetUI();
+
+        // Reload initial playlists
+        loadPlaylists('user');
+      }
+
+      // =====  Playlist Management  =====
+      // Handles playlist type change and resets state
+      function handleTypeChange(type) {
+        // Reset pagination and playlist states
+        state.currentOffset = 0;
+        state.hasMorePlaylists = true;
+        state.allPlaylists = [];
+
+        // Update dropdown text based on type
+        const displayText = type === 'user' ? 'My Playlists' : 'Public Playlists';
+        document.getElementById('selected-value').textContent = displayText;
+
+        // Hide dropdown after selection
+        document.getElementById('dropdown-menu').classList.add('hidden');
+
+        // Show loading and clear selections
+        showLoading();
+        state.selectedPlaylists.clear();
+        state.selectedPlaylistsCache.clear();
+        updateSelectedPlaylistsDisplay();
+        updateDownloadButtonState();
+
+        // Update search input
+        const searchInput = document.getElementById('search-input');
+        searchInput.value = '';
+        searchInput.placeholder = type === 'public' ?
+          'Search public playlists...' :
+          'Search your playlists...';
+
+        // Load playlists for selected type
+        loadPlaylists(type);
+      }
+
+      // Loads playlists from the server with pagination
+      function loadPlaylists(type, searchQuery = '') {
+        state.isLoading = true;
+        updateControls();
+
+        google.script.run
+          .withSuccessHandler((response) => {
+            state.isLoading = false;
+            state.isLoadingMore = false;
+            updateControls();
+
+            if (!response) {
+              showError('No playlists data available');
+              return;
+            }
+
+            // Handle public playlist response format
+            if (type === 'public') {
+              if (searchQuery === '') {
+                response = { items: [], total: 0, offset: 0 };
+              } else {
+                // Format raw playlist array into expected structure
+                response = {
+                  items: response || [],
+                  total: response?.length || 0,
+                  offset: state.currentOffset
+                };
+              }
+            }
+
+            // Update playlists array based on whether this is initial load or load more
+            state.allPlaylists = state.currentOffset === 0 ?
+              response.items :
+              [...state.allPlaylists, ...response.items];
+
+            // Update pagination state
+            state.hasMorePlaylists = type === 'user' &&
+              response.offset + response.items.length < response.total;
+
+            hideLoading();
+            renderPlaylists(state.allPlaylists);
+
+            // Remove existing load more button
+            const existingButton = document.getElementById('load-more-container');
+            if (existingButton) {
+              existingButton.remove();
+            }
+
+            // Add new load more button if there are more playlists
+            if (state.hasMorePlaylists) {
+              addLoadMoreButton();
+            }
+
+            // Restore selection state after rendering
+            state.selectedPlaylistsCache.forEach((node, playlistId) => {
+              const div = document.querySelector(`div[data-value*="${playlistId}"]`);
+              if (div) {
+                div.dataset.selected = 'true';
+                div.classList.add('bg-blue-50', 'border-l-4', 'border-blue-500');
+                const checkIcon = div.querySelector('.check-icon');
+                if (checkIcon) checkIcon.classList.remove('hidden');
+              }
+            });
+          })
+          .withFailureHandler((error) => {
+            state.isLoading = false;
+            state.isLoadingMore = false;
+            updateControls();
+            console.error('Error:', error);
+            showError(`Error loading playlists: ${error.message}`);
+          })
+          .getPlaylistsInfo(type, searchQuery, state.currentOffset);
+      }
+
+      // Renders playlist items to the UI
+      function renderPlaylists(playlists) {
+        const container = document.getElementById('playlist-container');
+        const svgIcon = `
+          <svg class="h-8 w-8 text-gray-400" viewBox="0 0 24 24">
+            <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z" fill="currentColor"/>
+          </svg>`;
+
+        if (!playlists || playlists.length === 0) {
+          container.innerHTML = `
+            <div class="text-center py-10 text-gray-500">
+              <p class="font-semibold">No matching playlists found</p>
+              <p class="text-xs mt-1">Try adjusting your search term</p>
+            </div>
+          `;
+          return;
+        }
+
+        container.innerHTML = playlists.map(playlist => {
+        const playlistData = [
+          playlist.item_id,
+          playlist.name,
+          playlist.image_url,
+          playlist.total_tracks,
+          playlist.owner,
+          playlist.description
+        ];
+        const encodedValue = encodeURIComponent(JSON.stringify(playlistData));
+        const escapedValue = escapeJsString(encodedValue);
+        const isSelected = state.selectedPlaylistsCache.has(playlist.item_id);
+
+        return `
+          <div class="group">
+            <div class="block px-4 py-3 cursor-pointer hover:bg-gray-50 transition-all duration-150 relative
+                ${isSelected ? 'bg-blue-50 border-l-4 border-blue-500' : ''}"
+                    onclick="handlePlaylistSelection('${escapedValue}')"
+                    data-value="${encodedValue}"
+                    data-selected="${isSelected}"
+                    title="${escapeHtml(`Name: ${playlist.name}\nOwner: ${playlist.owner}\nTracks: ${playlist.total_tracks}${playlist.description ? '\n\nDescription: ' + playlist.description : ''}`)}"
+                >
+              <div class="flex items-start space-x-3">
+                <div class="relative">
+                  ${playlist.image_url ? `
+                    <img src="${playlist.image_url}" alt="${escapeHtml(playlist.name)}" class="w-16 h-16 object-cover rounded shadow-sm">
+                    ` : `
+                    <div class="w-16 h-16 bg-gray-100 rounded flex items-center justify-center">
+                        ${svgIcon}
+                    </div>
+                  `}
+                  <div class="check-icon absolute -top-1 -right-1 w-5 h-5 bg-blue-500 rounded-full flex items-center justify-center ${isSelected ? '' : 'hidden'}">
+                    <svg class="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                    </svg>
+                  </div>
+                </div>
+
+                <div class="flex-1 min-w-0 pr-2 relative">
+                  <div class="space-y-1">
+                    <p class="text-sm font-medium text-gray-900 group-hover:text-blue-600 truncate pr-2">
+                      ${escapeHtml(playlist.name || 'Unnamed Playlist')}
+                    </p>
+                    <p class="text-xs text-gray-500">
+                      ${escapeHtml(playlist.owner || 'Unknown Owner')}
+                    </p>
+                    <div class="flex items-center space-x-2">
+                      <a href="${playlist.item_id === 'saved_tracks' ? 'https://open.spotify.com/collection/tracks' : `https://open.spotify.com/playlist/${playlist.item_id}`}"
+                          target="_blank"
+                          title="Open in Spotify"
+                          class="inline-flex items-center p-1 text-gray-500 hover:text-green-600 hover:bg-green-50 rounded-full"
+                          onclick="event.stopPropagation()">
+                        <svg class="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
+                          <path d="M12 0C5.4 0 0 5.4 0 12s5.4 12 12 12 12-5.4 12-12S18.66 0 12 0zm5.521 17.34c-.24.359-.66.48-1.021.24-2.82-1.74-6.36-2.101-10.561-1.141-.418.122-.779-.179-.899-.539-.12-.421.18-.78.54-.9 4.56-1.021 8.52-.6 11.64 1.32.42.18.479.659.301 1.02zm1.44-3.3c-.301.42-.841.6-1.262.3-3.239-1.98-8.159-2.58-11.939-1.38-.479.12-1.02-.12-1.14-.6-.12-.48.12-1.021.6-1.141C9.6 9.9 15 10.561 18.72 12.84c.361.181.54.78.241 1.2zm.12-3.36C15.24 8.4 8.82 8.16 5.16 9.301c-.6.179-1.2-.181-1.38-.721-.18-.601.18-1.2.72-1.381 4.26-1.26 11.28-1.02 15.721 1.621.539.3.719 1.02.419 1.56-.299.421-1.02.599-1.559.3z"/>
+                        </svg>
+                      </a>
+                      <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-gray-200 text-gray-800">
+                        ${escapeHtml(playlist.total_tracks || '0')}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        `;
+        }).join('');
+      }
+
+      // Adds load more button to playlist container
+      function addLoadMoreButton() {
+        const container = document.getElementById('playlist-container');
+
+        // Remove existing load more button if present
+        const existingButton = document.getElementById('load-more-container');
+        if (existingButton) {
+          existingButton.remove();
+        }
+
+        const loadMoreDiv = document.createElement('div');
+        loadMoreDiv.id = 'load-more-container';
+        loadMoreDiv.className = 'text-center py-6 px-4'; // Added padding
+        loadMoreDiv.innerHTML = `
+          <div class="max-w-md mx-auto border border-gray-200 rounded-lg bg-white">
+            <button id="load-more-btn" onclick="loadMore()"
+                    class="w-full px-4 py-3 text-sm font-medium text-blue-600 hover:text-blue-700 focus:outline-none flex items-center justify-center space-x-2">
+              <span class="button-text">Load More Playlists</span>
+              <svg class="spinner hidden w-4 h-4" viewBox="0 0 24 24">
+                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+              </svg>
+            </button>
+          </div>
+        `;
+        container.appendChild(loadMoreDiv);
+      }
+
+      // Handles loading more playlists on scroll
+      function loadMore() {
+        if (state.isLoadingMore) return;
+
+        const button = document.getElementById('load-more-btn');
+        const buttonText = button.querySelector('.button-text');
+        const spinner = button.querySelector('.spinner');
+
+        // Show loading state
+        buttonText.textContent = 'Loading...';
+        spinner.classList.remove('hidden');
+        button.classList.add('opacity-70');
+
+        state.isLoadingMore = true;
+        state.currentOffset += 50;
+        const type = document.getElementById('selected-value').textContent === 'Public Playlists' ? 'public' : 'user';
+        const searchQuery = document.getElementById('search-input').value;
+
+        loadPlaylists(type, searchQuery);
+      }
+
+      // Filters playlists based on search term
+      function filterPlaylists(searchTerm) {
+        if (!state.allPlaylists || !Array.isArray(state.allPlaylists)) {
+          console.error('No playlists data available');
+          return;
+        }
+
+        searchTerm = (searchTerm || '').toLowerCase().trim();
+        const filtered = searchTerm === '' ? state.allPlaylists : state.allPlaylists.filter(playlist => {
+          const name = (playlist.name || '').toLowerCase();
+          const owner = (playlist.owner || '').toLowerCase();
+          const description = (playlist.description || '').toLowerCase();
+          return name.includes(searchTerm) || owner.includes(searchTerm) || description.includes(searchTerm);
+        });
+
+        renderPlaylists(filtered);
+
+        // Restore selection state
+        state.selectedPlaylistsCache.forEach((node, playlistId) => {
+          const div = document.querySelector(`div[data-value*="${playlistId}"]`);
+          if (div) {
+            div.dataset.selected = 'true';
+            div.classList.add('bg-blue-50', 'border-l-4', 'border-blue-500');
+            const checkIcon = div.querySelector('.check-icon');
+            if (checkIcon) checkIcon.classList.remove('hidden');
+          }
+        });
+
+        // Add load more button if search is cleared
+        if (searchTerm === '' && state.hasMorePlaylists) {
+          addLoadMoreButton();
+        }
+      }
+
+      // =====  Selection Management  =====
+      // Handles selection/deselection of individual playlists
+      function handlePlaylistSelection(encodedValue) {
+        try {
+          const element = event.currentTarget;
+          const isSelected = element.dataset.selected === 'true';
+          const checkIcon = element.querySelector('.check-icon');
+
+          // Properly decode the JSON string
+          let playlistData;
+          try {
+            playlistData = JSON.parse(decodeURIComponent(encodedValue));
+          } catch (e) {
+            console.error('Error parsing playlist data:', e);
+            return;
+          }
+
+          element.dataset.selected = !isSelected;
+
+          if (!isSelected) {
+            state.selectedPlaylists.add(encodedValue);
+            state.selectedPlaylistsCache.set(playlistData[0], {
+              id: playlistData[0],
+              name: playlistData[1],
+              image: playlistData[2],
+              tracks: playlistData[3] || '0 songs',
+              owner: playlistData[4] || 'Unknown Owner',
+              description: playlistData[5] || ''
+            });
+            element.classList.add('bg-blue-50', 'border-l-4', 'border-blue-500');
+            checkIcon.classList.remove('hidden');
+          } else {
+            state.selectedPlaylists.delete(encodedValue);
+            state.selectedPlaylistsCache.delete(playlistData[0]);
+            element.classList.remove('bg-blue-50', 'border-l-4', 'border-blue-500');
+            checkIcon.classList.add('hidden');
+          }
+
+          updateSelectedPlaylistsDisplay();
+          updateDownloadButtonState();
+        } catch (error) {
+            console.error('Error in handlePlaylistSelection:', error);
+        }
+      }
+
+      // Removes a playlist from selection and updates UI
+      function removePlaylistFromSelection(playlistId) {
+        state.selectedPlaylistsCache.delete(playlistId);
+        state.selectedPlaylists = new Set(Array.from(state.selectedPlaylistsCache.keys()));
+        updateSelectedPlaylistsDisplay();
+        updateDownloadButtonState();
+
+        // Update visual state in main list
+        const playlistDiv = document.querySelector(`div[data-value*="${playlistId}"]`);
+        if (playlistDiv) {
+          playlistDiv.dataset.selected = 'false';
+          playlistDiv.classList.remove('bg-blue-50', 'border-l-4', 'border-blue-500');
+          const checkIcon = playlistDiv.querySelector('.check-icon');
+          if (checkIcon) {
+            checkIcon.classList.add('hidden');
+          }
+        }
+      }
+
+      // Updates the selected playlists view in the UI
+      function updateSelectedPlaylistsDisplay() {
+        const container = document.getElementById('selected-playlists-container');
+        const countBadge = document.getElementById('selected-count-badge');
+
+        countBadge.textContent = state.selectedPlaylistsCache.size > 0 ?
+          `(${state.selectedPlaylistsCache.size})` :
+          '(0)';
+
+        if (state.selectedPlaylistsCache.size > 0) {
+          container.innerHTML = Array.from(state.selectedPlaylistsCache.values())
+            .map(playlist => `
+              <div class="flex items-center border-t border-gray-200 px-4 py-2 hover:bg-gray-50">
+                ${playlist.image === "" ? `
+                <div class="w-8 h-8 bg-gray-100 rounded flex items-center justify-center">
+                  <svg class="h-4 w-4 text-gray-400" viewBox="0 0 24 24">
+                    <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z" fill="currentColor"/>
+                  </svg>
+                </div>
+                ` : `<img src="${playlist.image}" alt="${playlist.name}" class="w-8 h-8 rounded">`}
+                <div class="flex-1 min-w-0 ml-3">
+                  <div class="text-sm font-medium text-gray-900 truncate">${playlist.name}</div>
+                  <div class="text-xs text-gray-500">${playlist.tracks}</div>
+                </div>
+                <button onclick="removePlaylistFromSelection('${playlist.id}')"
+                        class="p-1 rounded-full hover:bg-gray-100 transition-colors focus:outline-none ml-2"
+                        aria-label="Remove playlist">
+                  <svg class="w-4 h-4 text-gray-400 hover:text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
+            `)
+            .join('');
+        } else {
+          container.innerHTML = `
+            <div class="border-b border-gray-200 px-4 py-3 text-center text-sm text-gray-500">
+              No playlists selected
+            </div>
+          `;
+        }
+      }
+
+      // Updates download button state based on selections
+      function updateDownloadButtonState() {
+        const downloadButton = document.getElementById('download-button');
+        const isEnabled = state.selectedPlaylists.size > 0;
+        downloadButton.disabled = !isEnabled;
+        downloadButton.classList.toggle('btn-disabled', !isEnabled);
+      }
+
+      // Toggles the selected playlists section expansion
+      function toggleSelectedPlaylists() {
+        const container = document.getElementById('selected-playlists-container');
+        const icon = document.getElementById('collapse-icon');
+        const expandedIcon = icon.querySelector('.expanded-icon');
+        const collapsedIcon = icon.querySelector('.collapsed-icon');
+
+        container.classList.toggle('playlist-expanded');
+        expandedIcon.classList.toggle('hidden');
+        collapsedIcon.classList.toggle('hidden');
+      }
+
+      // =====  Search & Navigation  =====
+      // Handles search input with debounce
+      function handleSearch(value) {
+        clearTimeout(state.currentSearchTimeout);
+        state.currentSearchTimeout = setTimeout(() => {
+          const currentValue = document.getElementById('selected-value').textContent;
+          const type = currentValue === 'Public Playlists' ? 'public' : 'user';
+
+          if (type === 'public') {
+            if (value.trim() === '') {
+              renderPlaylists([]);
+            } else {
+              loadPlaylists('public', value);
+            }
+          } else {
+            filterPlaylists(value);
+          }
+        }, 300);
+      }
+
+      // Clears search input and resets playlist display
+      function clearSearch() {
+        const searchInput = document.getElementById('search-input');
+        searchInput.value = '';
+        const type = document.getElementById('selected-value').textContent === 'Public Playlists' ? 'public' : 'user';
+
+        if (type === 'public') {
+          renderPlaylists([]);
+          updateSelectedPlaylistsDisplay();
+        } else {
+          filterPlaylists('');
+        }
+      }
+
+      // Navigates back to playlist manager view
+      function showPlaylistsManager() {
+        const button = document.querySelector('button');
+        const buttonText = button.querySelector('.button-text');
+        const spinner = button.querySelector('.spinner');
+
+        buttonText.classList.add('invisible');
+        spinner.classList.remove('hidden');
+        button.disabled = true;
+        button.classList.add('opacity-90', 'cursor-not-allowed');
+
+        google.script.run
+          .withSuccessHandler(() => {
+            buttonText.classList.remove('invisible');
+            spinner.classList.add('hidden');
+          })
+          .showPlaylistsManager();
+      }
+
+      // =====  Download Management  =====
+      // Downloads selected playlists to Google Sheets
+      function downloadSelectedPlaylists() {
+        // Reset cancellation state
+        state.isDownloadCancelled = false;
+        state.pendingDownloads.clear();
+
+        // Get UI controls
+        const button = document.getElementById('download-button');
+        const dropdownButton = document.getElementById('dropdown-button');
+        const searchInput = document.getElementById('search-input');
+        const total = state.selectedPlaylistsCache.size;
+        let completed = 0;
+
+        // Disable controls during download
+        [button, dropdownButton, searchInput].forEach(el => {
+          el.disabled = true;
+          el.classList.add('opacity-50', 'cursor-not-allowed');
+        });
+
+        showStatusModal(`Starting download of ${total} playlist(s)...`);
+
+        const playlists = Array.from(state.selectedPlaylistsCache.values());
+
+        // Process each playlist
+        playlists.forEach(playlist => {
+          // Skip if download was cancelled
+          if (state.isDownloadCancelled) return;
+
+          state.pendingDownloads.add(playlist.id);
+
+          google.script.run
+            .withSuccessHandler(() => {
+              if (state.isDownloadCancelled) return;
+
+              completed++;
+              state.pendingDownloads.delete(playlist.id);
+              showStatusModal(`Downloaded ${completed} of ${total} playlists...`);
+
+              if (completed === total) {
+                showStatusModal(`Successfully downloaded ${total} playlist(s)!`, 'success');
+
+                // Clear selections
+                const selectedItems = document.querySelectorAll('[data-selected="true"]');
+                selectedItems.forEach(item => {
+                  item.dataset.selected = 'false';
+                  item.classList.remove('bg-blue-50', 'border-l-4', 'border-blue-500');
+                  const checkIcon = item.querySelector('.check-icon');
+                  if (checkIcon) checkIcon.classList.add('hidden');
+                });
+
+                state.selectedPlaylists.clear();
+                state.selectedPlaylistsCache.clear();
+                updateSelectedPlaylistsDisplay();
+                updateDownloadButtonState();
+
+                // Re-enable controls
+                [button, dropdownButton, searchInput].forEach(el => {
+                  el.disabled = false;
+                  el.classList.remove('opacity-50', 'cursor-not-allowed');
+                });
+
+                setTimeout(() => { closeStatusModal(); }, 2000);
+              }
+            })
+            .withFailureHandler((error) => {
+              if (state.isDownloadCancelled) return;
+
+              state.pendingDownloads.delete(playlist.id);
+              showStatusModal(`Error downloading "${playlist.name}": ${error}`, 'error');
+
+              // Re-enable controls on error
+              [button, dropdownButton, searchInput].forEach(el => {
+                el.disabled = false;
+                el.classList.remove('opacity-50', 'cursor-not-allowed');
+              });
+            })
+            .getPlaylistItems(playlist.id, true);
+        });
+      }
+
+      // Cancels ongoing playlist downloads
+      function cancelDownload() {
+        state.isDownloadCancelled = true;
+        const pendingDownloads = Array.from(state.pendingDownloads);
+
+        // Show cancelling status
+        showStatusModal('Cancelling downloads...', 'loading');
+
+        // Stop execution and reset UI
+        setTimeout(() => {
+          state.pendingDownloads.clear();
+          resetFormState();
+          showStatusModal('Download cancelled', 'error');
+          setTimeout(closeStatusModal, 2000);
+        }, 500);
+      }
+
+      // =====  Modal Management  =====
+      // Shows status modal with customizable content
+      function showStatusModal(content, type = 'loading') {
+        const modal = document.getElementById('status-modal');
+        const modalContent = document.getElementById('modal-content');
+        const modalActions = document.getElementById('modal-actions');
+
+        modalContent.innerHTML = `
+          <div class="flex flex-col items-center gap-4">
+            ${type === 'loading' ?
+              `<div class="animate-spin rounded-full h-8 w-8 border-4 border-blue-500 border-t-transparent"></div>
+                <div class="text-gray-700">${content}</div>
+                ${state.pendingDownloads.size > 0 ?
+                  `<button onclick="cancelDownload()"
+                    class="w-full px-4 py-2 text-sm font-medium text-white bg-red-600 rounded-lg hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2">
+                    Cancel Download
+                  </button>` : ''
+                }` :
+              type === 'success' ?
+                `<svg class="h-8 w-8 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                  </svg>
+                  <div class="text-gray-700">${content}</div>` :
+                `<svg class="h-8 w-8 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                  </svg>
+                  <div class="text-gray-700">${content}</div>`
+            }
+          </div>`;
+
+        modalActions.style.display = type === 'loading' ? 'none' : 'flex';
+        modal.classList.remove('hidden');
+      }
+
+      // Closes the status modal
+      function closeStatusModal() {
+        document.getElementById('status-modal').classList.add('hidden');
+      }
+
+      // =====  Utility Functions  =====
+      // Escapes special characters in JavaScript strings
+      function escapeJsString(str) {
+        return str
+          .replace(/\\/g, '\\\\')
+          .replace(/'/g, "\\'")
+          .replace(/"/g, '\\"')
+          .replace(/\n/g, '\\n')
+          .replace(/\r/g, '\\r')
+          .replace(/\t/g, '\\t');
+      }
+
+      // Escapes HTML special characters
+      function escapeHtml(unsafe) {
+        if (!unsafe) return '';
+        return unsafe
+          .replace(/&/g, "&amp;")
+          .replace(/</g, "&lt;")
+          .replace(/>/g, "&gt;")
+          .replace(/"/g, "&quot;")
+          .replace(/'/g, "&#039;");
+      }
+    </script>
+  </body>
+</html>

@@ -1,0 +1,410 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <script src="https://cdn.tailwindcss.com"></script>
+  </head>
+  <body>
+    <div class="max-w-2xl mx-auto py-4">
+      <div data-hs-stepper class="w-full">
+
+        <!-- Progress Indicator -->
+        <div class="flex justify-between items-center mb-5">
+          <div class="flex justify-center items-center w-8 h-8 rounded-full bg-gray-100 font-medium text-gray-800 border-2 border-gray-200">1</div>
+          <div class="flex-1 h-0.5 bg-gray-200 mx-4"></div>
+          <div class="flex justify-center items-center w-8 h-8 rounded-full bg-gray-100 font-medium text-gray-800 border-2 border-gray-200">2</div>
+          <div class="flex-1 h-0.5 bg-gray-200 mx-4"></div>
+          <div class="flex justify-center items-center w-8 h-8 rounded-full bg-gray-100 font-medium text-gray-800 border-2 border-gray-200">3</div>
+          <div class="flex-1 h-0.5 bg-gray-200 mx-4"></div>
+          <div class="flex justify-center items-center w-8 h-8 rounded-full bg-gray-100 font-medium text-gray-800 border-2 border-gray-200">4</div>
+        </div>
+
+        <!-- Content sections -->
+        <div class="min-h-[775px] flex flex-col relative">
+          <div class="flex-grow">
+            <div data-hs-stepper-content-item='{"index": 1}'>
+              <div class="p-4 bg-gray-50 flex flex-col space-y-4 border border-dashed border-gray-200 rounded-xl">
+                <h3 class="text-lg font-bold text-black-600">Welcome to the Spotify Playlists Manager Guide!</h3>
+                <p class="text-sm text-gray-600">This guide will help you seamlessly connect your Spotify account to Google Sheets using the Spotify API. By following the steps outlined below, you will be able to:</p>
+                <ul class="list-disc list-inside space-y-2 text-sm text-gray-600 ml-4">
+                  <li>Fetch your Spotify playlists and display them in Google Sheets.</li>
+                  <li>Create and Update playlists from Google Sheets.</li>
+                  <li>Access tracks metadata.</li>
+                </ul>
+                <p class="text-sm text-gray-600">Click on Next to start with the setup process.</p>
+              </div>
+            </div>
+
+            <div data-hs-stepper-content-item='{"index": 2}' style="display: none;">
+              <div class="p-4 bg-gray-50 flex flex-col space-y-4 border border-dashed border-gray-200 rounded-xl">
+                <h3 class="text-lg font-bold text-black-600">Set Up Spotify API Credentials</h3>
+                <p class="text-sm text-gray-600">Let's create a Spotify App and get the App's credentials. Follow these easy steps to get the API Credentials and save it in this project.</p>
+                <ol class="list-decimal space-y-2 text-sm text-gray-600 ml-4">
+                  <li>
+                    <strong>Open the Spotify Developer Dashboard</strong><br>
+                    Go to <a href="https://developer.spotify.com" target="_blank" class="text-blue-600 underline">Spotify Developer</a>.
+                  </li>
+                  <li>
+                    <strong>Log in to Your Spotify Account</strong><br>
+                    Use your existing Spotify credentials to sign in.
+                  </li>
+                  <li>
+                    <strong>Create a New App</strong><br>
+                    - Navigate to the <a href="https://developer.spotify.com/dashboard" target="_blank" class="text-blue-600 underline">Dashboard</a>.<br>
+                    - Click <strong>Create App</strong>.<br>
+                    - Give your app an <strong>App Name</strong> and <strong>App Description</strong>.<br>
+                    - Copy and paste the following URI into the <strong>Redirect URI</strong> field and click <strong>Add</strong><br>
+                      <div class="flex items-center py-2">
+                        <div class="flex-1 min-w-0">
+                          <input id="redirect-uri" type="text" disabled
+                              class="block w-full px-4 py-1 text-gray-800 text-sm bg-gray-200 border border-gray-300 rounded-md truncate"/>
+                        </div>
+                        <button type="button" class="ml-2 px-4 py-2 text-xs font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 focus:outline-none" onclick="copyURI()">
+                          Copy URI
+                        </button>
+                      </div>
+                    - Select <strong>Web API</strong> for the API/SDK question.<br>
+                    - Select <strong>I understand and agree</strong> to accept Spotify's terms and conditions.<br>
+                    - Click <strong>Save</strong> to create the app.
+                  </li>
+                  <li>
+                    <strong>Get Your Client Credentials</strong><br>
+                    - Navigate to the <a href="https://developer.spotify.com/dashboard" target="_blank" class="text-blue-600 underline">Dashboard</a> again and select your newly created app.<br>
+                    - Go to the <strong>Settings</strong> of your app.<br>
+                    - Find and Paste the <strong>Client ID</strong> and <strong>Client Secret</strong> into the fields provided below.<br>
+                    <div class="space-y-2 mt-2 mb-2">
+                      <div>
+                        <label for="client-id" class="block text-sm font-medium text-gray-700">Client ID</label>
+                        <input id="client-id" type="text"
+                          class="mt-1 block w-full px-4 py-2 text-sm text-gray-800 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                          placeholder="Enter your Client ID">
+                      </div>
+                      <div>
+                        <label for="client-secret" class="block text-sm font-medium text-gray-700">Client Secret</label>
+                        <input id="client-secret" type="text"
+                          class="mt-1 block w-full px-4 py-2 text-sm text-gray-800 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                          placeholder="Enter your Client Secret">
+                      </div>
+                    </div>
+                  </li>
+                </ol>
+
+                <p class="text-sm text-gray-600">Once done, click on <strong>Next</strong> to proceed to the next step.</p>
+              </div>
+            </div>
+
+            <div data-hs-stepper-content-item='{"index": 3}' style="display: none;">
+              <div class="p-4 bg-gray-50 flex flex-col space-y-4 border border-dashed border-gray-200 rounded-xl">
+                <h3 class="text-lg font-bold text-black-600">Add OAuth2 Library</h3>
+                <p class="text-sm text-gray-600">
+                  To connect the Spotify API with Google Apps Script, you need to add the <b>OAuth2</b> library to your project. Follow these steps:
+                </p>
+
+                <ol class="list-decimal space-y-2 text-sm text-gray-600 ml-4">
+                  <li>
+                    <strong>Open the Apps Script Editor</strong><br>
+                    Click the button below to open the editor.
+                    <div class="mt-2">
+                      <button type="button" class="inline-block px-4 py-2 text-xs font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 focus:outline-none" onclick="openScriptEditor()">
+                        Open Editor
+                      </button>
+                    </div>
+                  </li>
+                  <li>
+                    <strong>Find the Libraries Section</strong><br>
+                    In the Apps Script Editor, on the left side bar locate the <strong>Libraries</strong> section under the <strong>Files</strong> tab.
+                  </li>
+                  <li>
+                    <strong>Add the OAuth2 Library</strong><br>
+                    - Click the <strong>Plus (+)</strong> button next to the Libraries section.<br>
+                    - Paste the following <strong>Script ID</strong> into the input field:
+                    <div class="flex items-center py-2">
+                      <div class="flex-1 min-w-0">
+                        <input id="library-id" type="text" disabled
+                          class="block w-full px-4 py-1 text-sm text-gray-800 bg-gray-200 border border-gray-300 rounded-md truncate"
+                          value="1B7FSrk5Zi6L1rSxxTDgDEUsPzlukDsi4KGuTMorsTQHhGBzBkMun4iDF"/>
+                      </div>
+                      <button type="button"
+                        class="ml-2 px-4 py-2 text-xs font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 focus:outline-none"
+                        onclick="copyLibraryID()">
+                        Copy Library ID
+                      </button>
+                    </div>
+                  </li>
+                  <li>
+                    <strong>Look Up and Add</strong><br>
+                    Click <strong>Look Up</strong>. Once the library loads, click <strong>Add</strong> without making any changes to the rest of the options.
+                  </li>
+                </ol>
+                <p class="text-sm text-gray-600">Once added, you're ready to proceed. Click <strong>Next</strong> to continue.</p>
+              </div>
+            </div>
+
+            <div data-hs-stepper-content-item='{"index": 4}' style="display: none;">
+              <div class="p-4 bg-gray-50 flex flex-col space-y-4 border border-dashed border-gray-200 rounded-xl">
+                <h3 class="text-lg font-bold text-black-600">Authorize Spotify App access</h3>
+                <p class="text-sm text-gray-600">To finish setting up, you need to authorize the Spotify app. Follow these steps:</p>
+                  <ol class="list-decimal space-y-2 text-sm text-gray-600 ml-4">
+                    <li>Click the <strong>Authorize</strong> button below.</li>
+                    <li>You’ll be redirected to Spotify’s authorization page.</li>
+                    <li>Click on <strong>Agree</strong> to approve access to the Spotify API.</li>
+                    <div class="flex items-center py-2">
+                      <div class="flex-1 min-w-0">
+                        <input id="authorization-url" type="text" disabled
+                          class="block w-full px-4 py-1 text-sm text-gray-800 bg-gray-200 border border-gray-300 rounded-md truncate"/>
+                      </div>
+                      <a id="auth-url-click" href="#" target="_blank"
+                        class="ml-2 px-4 py-2 text-xs font-medium text-white bg-gray-400 rounded-md pointer-events-none focus:outline-none">
+                        Click to Authorize
+                      </a>
+                    </div>
+                  </ol>
+                <p class="text-sm text-gray-600">Once done, click on <strong>Close</strong> to exit this guide.</p>
+              </div>
+            </div>
+
+            <div class="absolute bottom-0 left-0 w-full flex justify-between items-center gap-x-2 mt-2 p-2 bg-white">
+              <button type="button" class="py-2 px-3 inline-flex items-center gap-x-1 text-sm font-medium rounded-lg border border-gray-200 bg-white text-gray-800 shadow-sm hover:bg-gray-50 disabled:opacity-50" data-hs-stepper-back-btn>
+                ← Back
+              </button>
+              <button type="button" class="py-2 px-3 inline-flex items-center gap-x-1 text-sm font-medium rounded-lg border border-transparent bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-50" data-hs-stepper-next-btn>
+                Next →
+              </button>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <script>
+      // Initialize stepper on DOMContentLoaded
+      document.addEventListener('DOMContentLoaded', () => {
+        // Load secrets from Google Apps Script
+        google.script.run.withSuccessHandler(updateSecrets).getSecrets();
+
+        // Initialize Form steppers
+        const steppers = document.querySelectorAll('[data-hs-stepper]');
+        if (steppers.length > 0) {
+          steppers.forEach(stepper => {
+            new HSStepper(stepper);
+          });
+        } else {
+          console.error("No steppers found.");
+        }
+      });
+
+      function saveSecrets() {
+        const clientId = document.getElementById("client-id").value;
+        const clientSecret = document.getElementById("client-secret").value;
+        google.script.run.setCredentials(clientId, clientSecret);
+      }
+
+      function updateSecrets(secrets) {
+        if (secrets) {
+          // Add secrets to form input
+          document.getElementById("client-id").value = secrets.clientId || "";
+          document.getElementById("client-secret").value = secrets.clientSecret || "";
+          document.getElementById("redirect-uri").value = secrets.redirectUri || "";
+        } else {
+          console.error("Secrets not loaded.");
+        }
+      }
+
+      function copyURI() {
+        // Get the text field
+        var library_id = document.getElementById("redirect-uri");
+
+        // Select the text field
+        library_id.select();
+        library_id.setSelectionRange(0, 99999);
+
+        // Copy the text inside the text field
+        navigator.clipboard.writeText(library_id.value);
+
+        // Alert the copied text
+        alert("Redirect URI copied to clipboard.","Spotify Playlist Manager");
+        // google.script.host.close();
+      }
+
+      function copyLibraryID() {
+        // Get the text field
+        var library_id = document.getElementById("library-id");
+
+        // Select the text field
+        library_id.select();
+        library_id.setSelectionRange(0, 99999); // For mobile devices
+
+        // Copy the text inside the text field
+        navigator.clipboard.writeText(library_id.value);
+
+        // Alert the copied text
+        alert("Library ID copied to clipboard.","Spotify Playlist Manager");
+        // google.script.host.close();
+      }
+
+      function openScriptEditor() {
+        google.script.run.withSuccessHandler(openURL).getEditorURL();
+      }
+
+      function openURL(url) {
+        window.open(url,'_blank');
+      }
+
+      function getAuthorizationURL() {
+        google.script.run.withSuccessHandler(updateAuthorizationURL).getAuthorizationURL();
+      }
+
+      function clearAuthorizationURL() {
+        document.getElementById("authorization-url").value = "";
+      }
+
+      function updateAuthorizationURL(authorization_url) {
+        // Update the input field value
+        document.getElementById("authorization-url").value = authorization_url;
+
+        // Update the link href and enable it
+        const authLink = document.getElementById("auth-url-click");
+        authLink.href = authorization_url;
+
+        // Enable the button by updating styles
+        authLink.classList.remove("pointer-events-none", "bg-gray-400");
+        authLink.classList.add("bg-blue-600", "hover:bg-blue-700");
+      }
+
+      function closeGuide() {
+        google.script.host.close();
+      }
+
+      // Stepper form functions
+      class HSStepperItem {
+        constructor(el, options) {
+          this.el = el;
+          this.options = options;
+          this.index = options.index;
+        }
+      }
+
+      class HSStepper {
+        constructor(el) {
+          this.el = el;
+          this.currentIndex = 1;
+          this.items = [];
+          this.init();
+        }
+
+        init() {
+          // Initialize stepper content
+          this.el.querySelectorAll('[data-hs-stepper-content-item]').forEach(item => {
+            const options = JSON.parse(item.getAttribute('data-hs-stepper-content-item'));
+            this.items.push(new HSStepperItem(item, options));
+          });
+
+          // Initialize buttons
+          this.contentItems = this.el.querySelectorAll('[data-hs-stepper-content-item]');
+          this.stepCircles = Array.from(this.el.querySelectorAll('.rounded-full'));
+          this.lines = Array.from(this.el.querySelectorAll('.h-0\\.5'));
+          this.backBtn = this.el.querySelector('[data-hs-stepper-back-btn]');
+          this.nextBtn = this.el.querySelector('[data-hs-stepper-next-btn]');
+
+          this.setListeners();
+          this.updateUI();
+        }
+
+        setListeners() {
+          if (this.backBtn) {
+            this.backBtn.addEventListener('click', () => this.back());
+          }
+          if (this.nextBtn) {
+            this.nextBtn.addEventListener('click', () => this.next());
+          }
+        }
+
+        next() {
+          if (this.currentIndex < this.items.length) {
+            // Execute custom functions before moving forward
+            this.runNextStepFunction();
+            this.currentIndex++;
+            this.updateUI();
+          } else {
+            // If on the last step, close the guide
+            closeGuide();
+          }
+        }
+
+        back() {
+          if (this.currentIndex > 1) {
+            // Execute custom function before going back to the previous step
+            this.runBackStepFunction();
+
+            this.currentIndex--;
+            this.updateUI();
+          }
+        }
+
+        runNextStepFunction() {
+          switch (this.currentIndex) {
+            case 2:
+              console.log("Running saveSecrets() before moving to step 3");
+              saveSecrets();
+              break;
+            case 3:
+              console.log("Running getAuthorizationURL() before moving to step 4");
+              getAuthorizationURL();
+              break;
+            default:
+              console.log(`No custom function for step ${this.currentIndex}`);
+          }
+        }
+
+        runBackStepFunction() {
+          if (this.currentIndex === 4) {
+            console.log("Running clearAuthorizationURL() when navigating back to step 3");
+            clearAuthorizationURL();
+          }
+        }
+
+        updateUI() {
+          // Update step circles and lines
+          this.stepCircles.forEach((circle, index) => {
+            if (index < this.currentIndex) {
+              circle.classList.add('bg-blue-600', 'text-white', 'border-blue-600');
+              circle.classList.remove('bg-gray-100', 'text-gray-800', 'border-gray-200');
+            } else {
+              circle.classList.remove('bg-blue-600', 'text-white', 'border-blue-600');
+              circle.classList.add('bg-gray-100', 'text-gray-800', 'border-gray-200');
+            }
+          });
+
+          this.lines.forEach((line, index) => {
+            if (index < this.currentIndex - 1) {
+              line.classList.add('bg-blue-600');
+              line.classList.remove('bg-gray-200');
+            } else {
+              line.classList.remove('bg-blue-600');
+              line.classList.add('bg-gray-200');
+            }
+          });
+
+          // Update content visibility
+          this.contentItems.forEach(item => {
+            const options = JSON.parse(item.getAttribute('data-hs-stepper-content-item'));
+            item.style.display = options.index === this.currentIndex ? 'block' : 'none';
+          });
+
+          // Update button text and disable logic
+          if (this.backBtn) this.backBtn.disabled = this.currentIndex === 1;
+
+          if (this.nextBtn) {
+            if (this.currentIndex === this.items.length) {
+              // Last step - change button to "Close"
+              this.nextBtn.textContent = "Close";
+            } else {
+              // Any other step - set button to "Next"
+              this.nextBtn.textContent = "Next →";
+            }
+          }
+        }
+      }
+    </script>
+  </body>
+</html>

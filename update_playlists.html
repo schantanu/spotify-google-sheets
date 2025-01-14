@@ -1,0 +1,420 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+      .spinner {
+        animation: spin 1s linear infinite;
+        display: inline-block;
+      }
+
+      @keyframes spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+      }
+
+      .button-text, .spinner {
+        transition: opacity 0.15s ease-in-out;
+      }
+    </style>
+  </head>
+  <body class="bg-gray-50">
+
+    <!-- Main container -->
+    <div class="flex flex-col h-screen">
+
+      <!-- Header Section -->
+      <div class="flex-none p-4 space-y-4">
+
+        <!-- Back button -->
+        <div class="flex-none">
+          <button onclick="showPlaylistsManager()"
+                  class="w-full flex items-center justify-center px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 relative">
+            <span class="button-text">← Back to Playlists Manager</span>
+            <svg class="spinner hidden w-5 h-5 absolute" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+              <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+            </svg>
+          </button>
+        </div>
+
+        <hr>
+
+        <div class="mb-4">
+          <!-- Title -->
+          <h2 class="text-xl font-semibold text-gray-900 mb-2">Update Playlists</h2>
+          <p class="mb-3 text-sm text-gray-600">Select a playlist and sync the Google sheet tracks to Spotify.</p>
+
+          <!-- Quick Guide -->
+          <div class="rounded-md bg-white border border-gray-200">
+            <!-- Header -->
+            <div class="flex items-center justify-between p-3 cursor-pointer"
+                onclick="toggleGuide()">
+              <h6 class="font-medium text-gray-900">Quick Guide</h6>
+              <svg id="guide-chevron"
+                  class="w-5 h-5 text-gray-500 transform transition-transform duration-200"
+                  fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                      d="M19 9l-7 7-7-7" />
+              </svg>
+            </div>
+
+            <!-- Content -->
+            <div id="guide-content" class="overflow-hidden transition-all duration-200 max-h-0">
+              <div class="px-4 pb-4">
+                <p class="mb-3 text-sm text-gray-600">All changes are managed through Column A (Track ID) in your playlist sheet. After making your changes click 'Update Playlist' to update the playlist on Spotify.</p>
+                <ol class="text-sm text-gray-600 list-disc ml-4 space-y-1 mb-4">
+                  <li><b>Add tracks:</b> Copy Spotify track ID to a new row or insert in between existing track IDs</li>
+                  <li><b>Remove tracks:</b> Delete the entire row or only the cell in Column A containing the track ID</li>
+                  <li><b>Reorder tracks:</b> Arrange rows of track IDs  to change track order in the playlist</li>
+                </ol>
+
+                <!-- Notes -->
+                <div class="space-y-2">
+                  <p class="text-xs text-gray-500 italic">Track IDs should be in Spotify's standard format (e.g., <a href="https://open.spotify.com/track/3BovdzfaX4jb5KFQwoPfAw" target="_blank" class="text-blue-600 hover:text-blue-800">3BovdzfaX4jb5KFQwoPfAw</a>)
+                    <a href="https://developer.spotify.com/documentation/web-api/concepts/spotify-uris-ids"
+                       target="_blank"
+                       class="text-blue-600 hover:text-blue-800 hover:underline"
+                       title="Learn more about Spotify Track IDs">
+                      Learn more about Spotify Track IDs
+                    </a>
+                  </p>
+                  <p class="text-xs text-gray-500 italic">Only user-owned or collaborative public playlists can be updated</p>
+                  <p class="text-xs text-gray-500 italic">User's 'Liked Songs' cannot be reordered.</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <hr>
+
+        <div>
+          <form id="update-form" class="space-y-4">
+            <!-- Playlist Type Selector -->
+            <div>
+              <div class="relative w-full">
+                <button id="playlist-type-button" type="button"
+                  class="w-full flex items-center justify-between px-3 py-1.5 text-sm border rounded hover:border-gray-400 focus:ring-1 focus:ring-blue-500 bg-white">
+                  <span id="selected-type">My Playlists</span>
+                  <svg class="w-4 h-4 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path d="M19 9l-7 7-7-7"/>
+                  </svg>
+                </button>
+
+                <div id="playlist-type-menu"
+                  class="hidden absolute z-10 w-full mt-1 bg-white border rounded shadow-lg">
+                  <div class="py-1">
+                    <a href="#" data-value="my" class="block px-4 py-2 text-sm hover:bg-gray-100">My Playlists</a>
+                    <a href="#" data-value="public" class="block px-4 py-2 text-sm hover:bg-gray-100">Public Playlists</a>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- <div class="relative">
+              <select id="playlist-select" required disabled
+                class="w-full pl-3 pr-10 py-1.5 text-sm border rounded appearance-none focus:ring-1 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed bg-white">
+                <option value="">Loading playlists...</option>
+              </select>
+              <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 pr-3">
+                <svg class="w-4 h-4 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path d="M19 9l-7 7-7-7"/>
+                </svg>
+              </div>
+            </div> -->
+
+            <!-- Playlist Selector -->
+            <div>
+              <div class="relative w-full">
+                <button id="playlist-select-button" type="button"
+                  class="w-full flex items-center justify-between px-3 py-1.5 text-sm border rounded hover:border-gray-400 focus:ring-1 focus:ring-blue-500 bg-white disabled:opacity-50 disabled:cursor-not-allowed">
+                  <span id="selected-playlist">Loading playlists...</span>
+                  <svg class="w-4 h-4 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path d="M19 9l-7 7-7-7"/>
+                  </svg>
+                </button>
+
+                <div id="playlist-select-menu"
+                  class="hidden absolute z-10 w-full mt-1 bg-white border rounded shadow-lg max-h-60 overflow-auto">
+                  <div id="playlist-options" class="py-1"></div>
+                </div>
+              </div>
+            </div>
+
+            <div class="flex flex-col space-y-2">
+              <button type="submit" id="update-button" disabled
+                class="w-full px-4 py-2 text-sm font-medium text-white bg-blue-600 border border-transparent rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed">
+                Update Playlist
+              </button>
+              <button type="button" onclick="google.script.host.close()"
+                class="w-full px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2">
+                Cancel
+              </button>
+            </div>
+          </form>
+        </div>
+
+        <!-- Status -->
+        <div id="status" class="mt-2 px-4 py-3 text-sm rounded-md border hidden">
+          <p class="text-sm text-center"></p>
+        </div>
+      </div>
+
+      <!-- Confirmation Modal -->
+      <div id="confirm-modal" class="hidden fixed inset-0 z-50 overflow-auto bg-black bg-opacity-50 flex justify-center" style="padding-top: 400px;">
+        <div class="bg-white mx-4 p-4 rounded shadow-lg max-w-full h-fit">
+          <h3 class="text-md font-medium mb-2">Update Playlist?</h3>
+          <p class="text-sm text-gray-600 mb-3">Are you sure you want to update this playlist? This will sync all changes from the sheet to Spotify playlist.</p>
+          <div class="flex justify-end gap-2">
+            <button id="cancel-update" class="px-3 py-1 text-sm text-gray-600 hover:bg-gray-100 rounded">
+              Cancel
+            </button>
+            <button id="confirm-update" class="px-3 py-1 text-sm text-white bg-blue-600 hover:bg-blue-700 rounded">
+              Update
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      // DOM Elements
+      const updateForm = document.getElementById('update-form');
+      const playlistTypeButton = document.getElementById('playlist-type-button');
+      const playlistTypeMenu = document.getElementById('playlist-type-menu');
+      const selectedType = document.getElementById('selected-type');
+      const playlistSelect = document.getElementById('playlist-select');
+      const updateButton = document.getElementById('update-button');
+      const status = document.getElementById('status');
+
+      // Initialize Playlist dropdown
+      window.onload = function() {
+        loadUserPlaylists();
+      };
+
+      // Add hidden input for form submission
+      const playlistType = document.createElement('input');
+      playlistType.type = 'hidden';
+      playlistType.id = 'playlist-type';
+      playlistType.value = 'my';
+      updateForm.appendChild(playlistType);
+
+      // =====  Navigation & UI Controls  =====
+      // Navigates back to playlist manager view
+      function showPlaylistsManager() {
+        const button = document.querySelector('button');
+        const buttonText = button.querySelector('.button-text');
+        const spinner = button.querySelector('.spinner');
+
+        buttonText.classList.add('invisible');
+        spinner.classList.remove('hidden');
+        button.disabled = true;
+        button.classList.add('opacity-90', 'cursor-not-allowed');
+
+        google.script.run
+          .withSuccessHandler(() => {
+            buttonText.classList.remove('invisible');
+            spinner.classList.add('hidden');
+          })
+          .showPlaylistsManager();
+      }
+
+      // Toggle guide
+      function toggleGuide() {
+        const content = document.getElementById('guide-content');
+        const chevron = document.getElementById('guide-chevron');
+
+        // Toggle content visibility
+        if (content.style.maxHeight === '0px' || !content.style.maxHeight) {
+          content.style.maxHeight = content.scrollHeight + 'px';
+          chevron.classList.add('rotate-180');
+        } else {
+          content.style.maxHeight = '0px';
+          chevron.classList.remove('rotate-180');
+        }
+      }
+
+      // Toggle Playlist type
+      function togglePlaylistTypeMenu() {
+        playlistTypeMenu.classList.toggle('hidden');
+      }
+
+      // Updates status message with appropriate styling
+      function showStatus(message, type = 'info') {
+        const status = document.getElementById('status');
+        const statusText = status.querySelector('p');
+
+        // Set message and styling
+        statusText.textContent = message;
+        status.classList.remove('hidden', 'border-blue-200', 'border-green-200', 'border-red-200',
+                              'bg-blue-50', 'bg-green-50', 'bg-red-50',
+                              'text-blue-700', 'text-green-700', 'text-red-700');
+
+        // Apply appropriate styling based on type
+        switch(type) {
+          case 'success':
+            status.classList.add('border-green-200', 'bg-green-50', 'text-green-700');
+            break;
+          case 'error':
+            status.classList.add('border-red-200', 'bg-red-50', 'text-red-700');
+            break;
+          default:
+            status.classList.add('border-blue-200', 'bg-blue-50', 'text-blue-700');
+        }
+      }
+
+      // =====  Utility Functions  =====
+      // Load user playlists
+      function loadUserPlaylists() {
+        const selectButton = document.getElementById('playlist-select-button');
+        const selectedText = document.getElementById('selected-playlist');
+        selectButton.disabled = true;
+        selectedText.textContent = 'Loading playlists...';
+
+        google.script.run
+          .withSuccessHandler(function(playlists) {
+            const optionsContainer = document.getElementById('playlist-options');
+
+            if (!playlists || playlists.length === 0) {
+              optionsContainer.innerHTML = '<div class="px-4 py-2 text-sm text-gray-500">No playlists found</div>';
+            } else {
+              optionsContainer.innerHTML = playlists.map(playlist =>
+                  `<a href="#" data-value="${playlist.id}" class="block px-4 py-2 text-sm hover:bg-gray-100">${playlist.name}</a>`
+                ).join('');
+            }
+
+            // Update placeholder after loading
+            selectedText.textContent = 'Choose a playlist...';
+            selectButton.disabled = false;
+
+            // Add click handlers for options
+            optionsContainer.querySelectorAll('a').forEach(option => {
+              option.addEventListener('click', (e) => {
+                e.preventDefault();
+                selectedText.textContent = option.textContent;
+                updateButton.disabled = !option.dataset.value;
+                document.getElementById('playlist-select-menu').classList.add('hidden');
+              });
+            });
+          })
+          .withFailureHandler(function(error) {
+            selectedText.textContent = 'Error loading playlists';
+
+            optionsContainer.innerHTML = '<div class="px-4 py-2 text-sm text-gray-500">Error loading playlists</div>';
+            showStatus(`Error: ${error}`, 'error');
+          })
+          .getUserOwnedPlaylists(playlistType.value === 'my');
+      }
+
+      // Update playlist tracks
+      function updatePlaylist() {
+        const selectButton = document.getElementById('playlist-select-button');
+        let isCancelled = false;
+
+        selectButton.disabled = true;
+        updateButton.disabled = true;
+
+        const selectedOption = selectButton.querySelector('span').textContent;
+        const playlistId = Array.from(document.querySelectorAll('#playlist-options a'))
+          .find(a => a.textContent === selectedOption)?.dataset.value;
+
+        showStatus('Updating playlist...', 'info');
+
+        // Add cancel handler
+        document.getElementById('cancel-update').onclick = () => {
+          isCancelled = true;
+          document.getElementById('confirm-modal').classList.add('hidden');
+          showPlaylistsManager();
+        };
+
+        google.script.run
+          .withSuccessHandler(result => {
+            if (isCancelled) return;
+
+            if (result.code === 403) {
+              showStatus('You don\'t have permission to edit this playlist. Please ask the owner to add you as a collaborator.', 'error');
+            } else if (result.code === 200) {
+              showStatus('Playlist updated successfully!', 'success');
+            }
+            selectButton.disabled = false;
+            updateButton.disabled = false;
+          })
+          .withFailureHandler(error => {
+            if (isCancelled) return;
+
+            showStatus(`Error: ${error}`, 'error');
+            selectButton.disabled = false;
+            updateButton.disabled = false;
+          })
+          .updatePlaylist(playlistId);
+      }
+
+      // =====  Modal & Confirmation Handling  =====
+      // Shows confirmation modal and handles user response
+      function showConfirmationModal() {
+        const modal = document.getElementById('confirm-modal');
+        modal.classList.remove('hidden');
+
+        // Handle confirmation
+        document.getElementById('confirm-update').onclick = () => {
+          modal.classList.add('hidden');
+          updatePlaylist();
+        };
+
+        // Handle cancellation
+        document.getElementById('cancel-update').onclick = () => {
+          modal.classList.add('hidden');
+        };
+      }
+
+      // =====  Event Listeners  =====
+      playlistTypeButton.addEventListener('click', togglePlaylistTypeMenu);
+
+      // Add event listener for dropdown toggle
+      document.getElementById('playlist-select-button').addEventListener('click', () => {
+        document.getElementById('playlist-select-menu').classList.toggle('hidden');
+      });
+
+      // Close dropdowns when clicking outside
+      document.addEventListener('click', (e) => {
+        // Close playlist selection dropdown
+        if (!e.target.closest('#playlist-select-button')) {
+          document.getElementById('playlist-select-menu').classList.add('hidden');
+        }
+
+        // Close playlist type dropdown
+        if (!playlistTypeButton.contains(e.target)) {
+          playlistTypeMenu.classList.add('hidden');
+        }
+      });
+
+      // Handle form submission
+      updateForm.addEventListener('submit', function(e) {
+        e.preventDefault();
+        showConfirmationModal();
+      });
+
+      // Update playlist type selection handler
+      playlistTypeMenu.querySelectorAll('a').forEach(option => {
+        option.addEventListener('click', function(e) {
+          e.preventDefault();
+          selectedType.textContent = this.textContent;
+          playlistTypeMenu.classList.add('hidden');
+          playlistType.value = this.dataset.value;
+
+          // Reset playlist select to loading state
+          const selectButton = document.getElementById('playlist-select-button');
+          const selectedText = document.getElementById('selected-playlist');
+          selectButton.disabled = true;
+          selectedText.textContent = 'Loading playlists...';
+
+          // Clear previous options
+          document.getElementById('playlist-options').innerHTML = '';
+
+          loadUserPlaylists();
+        });
+      });
+    </script>
+  </body>
+</html>

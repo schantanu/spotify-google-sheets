@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+      /* Spinner animation */
+      .spinner {
+        animation: spin 1s linear infinite;
+        display: inline-block;
+      }
+
+      @keyframes spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+      }
+
+      /* Smooth transitions */
+      .button-text, .spinner {
+        transition: opacity 0.15s ease-in-out;
+      }
+    </style>
+  </head>
+  <body class="text-sm bg-gray-50">
+    <div class="container mx-auto px-4">
+
+      <!-- Header -->
+      <div class="my-3">
+        <h4 class="text-xl font-bold mt-3 text-gray-900">Spotify Playlists Manager</h4>
+        <p class="mb-3 text-gray-600">Welcome to the Spotify Playlists Manager for Google Sheets.</p>
+      </div>
+
+      <!-- Playlists Summary -->
+      <div class="bg-white rounded-lg p-4 shadow-sm border border-gray-200 mb-4">
+        <h6 class="font-semibold text-base text-gray-900 mb-2">Playlists Summary</h6>
+        <p class="mb-3 text-sm text-gray-600">Get a list of all Spotify playlists from your library, including the ones that you follow, in Google Sheets.</p>
+        <p class="mb-3 text-xs text-gray-400 italic">Excludes Spotify-owned playlists.</p>
+        <button onclick="getPlaylists()"
+                class="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded transition-colors"
+                id="getSummaryBtn">
+          Get Summary
+        </button>
+        <div id="summaryMessage" class="mt-2 px-3 py-2 rounded text-center text-xs hidden"></div>
+      </div>
+
+      <!-- Download Playlists -->
+      <div class="bg-white rounded-lg p-4 shadow-sm border border-gray-200 mb-4">
+        <h6 class="font-semibold text-base text-gray-900 mb-2">Download Playlists</h6>
+        <p class="mb-3 text-sm text-gray-600">Select your playlists or public playlists and download tracks from Spotify into Google sheets.</p>
+        <button onclick="showPlaylists()"
+                class="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded transition-colors relative flex items-center justify-center min-h-[40px]"
+                id="selectPlaylistsBtn">
+          <span class="button-text">Download Playlists</span>
+          <svg class="spinner hidden w-5 h-5 absolute" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+          </svg>
+        </button>
+      </div>
+
+      <!-- Update Playlists -->
+      <div class="bg-white rounded-lg p-4 shadow-sm border border-gray-200 mb-4">
+        <h6 class="font-semibold text-base text-gray-900 mb-2">Update Playlists</h6>
+        <p class="mb-3 text-gray-600">Add, remove or reorder tracks for your or collaborative playlists on Spotify from Google sheets.</p>
+        <button onclick="showUpdatePlaylist()"
+                class="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded transition-colors relative flex items-center justify-center min-h-[40px]"
+                id="updatePlaylistsBtn">
+          <span class="button-text">Update Playlists</span>
+          <svg class="spinner hidden w-5 h-5 absolute" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+          </svg>
+        </button>
+      </div>
+
+      <!-- Create Playlists -->
+      <div class="bg-white rounded-lg p-4 shadow-sm border border-gray-200 mb-4">
+        <h6 class="font-semibold text-base text-gray-900 mb-2">Create Playlists</h6>
+        <p class="mb-3 text-gray-600">Create a new private playlist on Spotify from Google sheets.</p>
+        <button onclick="showCreatePlaylist()"
+                class="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded transition-colors relative flex items-center justify-center min-h-[40px]"
+                id="createPlaylistBtn">
+          <span class="button-text">Create Playlists</span>
+          <svg class="spinner hidden w-5 h-5 absolute" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+          </svg>
+        </button>
+      </div>
+    </div>
+
+    <script>
+      // =====  UI State Management  =====
+      // Shows loading spinner and disables button
+      function showButtonLoading(button) {
+        const buttonText = button.querySelector('.button-text');
+        const spinner = button.querySelector('.spinner');
+
+        buttonText.classList.add('invisible');
+        spinner.classList.remove('hidden');
+
+        button.disabled = true;
+        button.classList.add('opacity-90', 'cursor-not-allowed');
+      }
+
+      // Hides loading spinner and enables button
+      function hideButtonLoading(button) {
+        const buttonText = button.querySelector('.button-text');
+        const spinner = button.querySelector('.spinner');
+
+        buttonText.classList.remove('invisible');
+        spinner.classList.add('hidden');
+
+        button.disabled = false;
+        button.classList.remove('opacity-90', 'cursor-not-allowed');
+      }
+
+      // Disables all buttons except the active one
+      function disableAllButtons() {
+        const allButtons = [
+          'getSummaryBtn',
+          'selectPlaylistsBtn',
+          'updatePlaylistsBtn',
+          'createPlaylistBtn'
+        ];
+        allButtons.forEach(id => {
+          const button = document.getElementById(id);
+          if (button) {
+            button.disabled = true;
+            button.classList.add('opacity-50', 'cursor-not-allowed');
+          }
+        });
+      }
+
+      // Re-enables all buttons
+      function enableAllButtons() {
+        const allButtons = [
+          'getSummaryBtn',
+          'selectPlaylistsBtn',
+          'updatePlaylistsBtn',
+          'createPlaylistBtn'
+        ];
+        allButtons.forEach(id => {
+          const button = document.getElementById(id);
+          if (button) {
+            button.disabled = false;
+            button.classList.remove('opacity-50', 'cursor-not-allowed');
+          }
+        });
+      }
+
+      // Shows success state on button
+      function showSuccessState(button) {
+        button.classList.add('bg-green-600');
+        setTimeout(() => button.classList.remove('bg-green-600'), 1000);
+      }
+
+      // Shows error state on button
+      function showErrorState(button) {
+        button.classList.add('bg-red-600');
+        setTimeout(() => button.classList.remove('bg-red-600'), 1000);
+      }
+
+      // =====  Core Functions  =====
+      // Gets playlist summary with loading and error states
+      function getPlaylists() {
+        const button = document.getElementById('getSummaryBtn');
+        disableAllButtons(); // Disable all buttons at start
+
+        showMessage('summaryMessage', 'Loading summary...', 'bg-blue-100 text-blue-700');
+
+        google.script.run
+          .withSuccessHandler(function() {
+            showMessage('summaryMessage', '✓ Playlists successfully loaded!', 'bg-green-100 text-green-700');
+            enableAllButtons(); // Re-enable all buttons on success
+            setTimeout(() => hideMessage('summaryMessage'), 3000);
+          })
+          .withFailureHandler(function(error) {
+            showMessage('summaryMessage', '⚠ Error. Please try again.', 'bg-red-100 text-red-700');
+            enableAllButtons(); // Re-enable all buttons on error
+          })
+          .getPlaylistsSummary();
+      }
+
+      // Handles button click events with loading state and error handling
+      function handleButtonClick(buttonId, functionName) {
+        const button = document.getElementById(buttonId);
+        showButtonLoading(button);
+        disableAllButtons(); // Disable all buttons when process starts
+
+        google.script.run
+          .withSuccessHandler(function() {
+            hideButtonLoading(button);
+            showSuccessState(button);
+            enableAllButtons(); // Re-enable all buttons on success
+          })
+          .withFailureHandler(function(error) {
+            hideButtonLoading(button);
+            showErrorState(button);
+            enableAllButtons(); // Re-enable all buttons on error
+            console.error('Error:', error);
+          })[functionName]();
+      }
+
+      // =====  Message Handling  =====
+      // Shows message in the specified element
+      function showMessage(elementId, text, classes) {
+        const messageDiv = document.getElementById(elementId);
+        messageDiv.textContent = text;
+        messageDiv.className = `mt-2 px-3 py-2 rounded text-center text-sm ${classes}`;
+        messageDiv.classList.remove('hidden');
+      }
+
+      // Hides message element
+      function hideMessage(elementId) {
+        document.getElementById(elementId).classList.add('hidden');
+      }
+
+      // =====  Navigation  =====
+      // Shows playlists manager UI
+      function showPlaylists() {
+      handleButtonClick('selectPlaylistsBtn', 'showDownloadPlaylists');
+      }
+
+      // Shows update playlists UI
+      function showUpdatePlaylist() {
+      handleButtonClick('updatePlaylistsBtn', 'showUpdatePlaylists');
+      }
+
+      // Shows create playlist UI
+      function showCreatePlaylist() {
+      handleButtonClick('createPlaylistBtn', 'showCreatePlaylists');
+      }
+    </script>
+  </body>
+</html>

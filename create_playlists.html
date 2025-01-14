@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+      .spinner {
+        animation: spin 1s linear infinite;
+        display: inline-block;
+      }
+
+      @keyframes spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+      }
+
+      .button-text, .spinner {
+        transition: opacity 0.15s ease-in-out;
+      }
+    </style>
+  </head>
+  <body class="bg-gray-50">
+
+    <!-- Main container -->
+    <div class="flex flex-col h-screen">
+
+      <!-- Header Section -->
+      <div class="flex-none p-4 space-y-4">
+
+        <!-- Back button -->
+        <div class="flex-none">
+          <button onclick="showPlaylistsManager()"
+                  class="w-full flex items-center justify-center px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 relative">
+            <span class="button-text">← Back to Playlists Manager</span>
+            <svg class="spinner hidden w-5 h-5 absolute" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+              <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+            </svg>
+          </button>
+        </div>
+
+        <hr>
+
+        <div class="mb-4">
+          <!-- Title -->
+          <h2 class="text-xl font-semibold text-gray-900 mb-2">Create Playlists</h2>
+          <p class="mb-3 text-sm text-gray-600">Create a new private playlist on Spotify.</p>
+
+          <!-- Quick Guide -->
+          <div class="rounded-md bg-white border border-gray-200">
+            <!-- Header -->
+            <div class="flex items-center justify-between p-3 cursor-pointer"
+                onclick="toggleGuide()">
+              <h6 class="font-medium text-gray-900">Quick Guide</h6>
+              <svg id="guide-chevron"
+                  class="w-5 h-5 text-gray-500 transform transition-transform duration-200"
+                  fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                      d="M19 9l-7 7-7-7" />
+              </svg>
+            </div>
+
+            <!-- Content -->
+            <div id="guide-content" class="overflow-hidden transition-all duration-200 max-h-0">
+              <div class="px-4 pb-4">
+                <ol class="text-sm text-gray-600 list-disc ml-4 space-y-1 mb-4">
+                  <li>Give your playlist a name and description and create playlist</li>
+                  <li>A Google sheet will be created for your newly created playlist</li>
+                  <li>Begin to add tracks to the sheet using Track IDs in Column A</li>
+                  <li>Go to 'Update Playlists' to upload tracks from the sheet to Spotify</li>
+                </ol>
+
+                <!-- Notes -->
+                <div class="space-y-2">
+                  <p class="text-xs text-gray-500 italic">Your playlist will be set as private by default</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <hr>
+
+        <div>
+          <form id="playlist-form">
+            <!-- Playlist Name -->
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-1">
+                Playlist Name <span class="text-red-500">*</span>
+              </label>
+              <input type="text" id="playlist-name" required maxlength="100"
+                class="w-full pl-3 pr-8 py-1.5 text-sm border rounded focus:ring-1 focus:ring-blue-500"
+                placeholder="Enter playlist name">
+              <p class="mt-1 text-xs text-gray-500 flex justify-end">
+                <span id="name-chars">0</span>/100
+              </p>
+            </div>
+
+            <!-- Playlist Description -->
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-1">Description</label>
+              <textarea id="playlist-description" rows="3" maxlength="300"
+                class="w-full pl-3 pr-8 py-1.5 text-sm border rounded focus:ring-1 focus:ring-blue-500"
+                placeholder="Add an optional description"></textarea>
+              <p class="mt-1 text-xs text-gray-500 flex justify-end">
+                <span id="desc-chars">0</span>/300
+              </p>
+            </div>
+
+            <div class="mt-3 flex flex-col space-y-2">
+              <button type="submit" id="create-button" disabled
+                class="w-full px-4 py-2 text-sm font-medium text-white bg-blue-600 border border-transparent rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed">
+                Create Playlist
+              </button>
+              <button type="button" onclick="google.script.host.close()"
+                class="w-full px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                Cancel
+              </button>
+            </div>
+          </form>
+        </div>
+
+        <!-- Status -->
+        <div id="status" class="mt-2 px-4 py-3 text-sm rounded-md border hidden">
+          <p class="text-sm text-center"></p>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      // Get DOM elements
+      const playlistForm = document.getElementById('playlist-form');
+      const playlistNameInput = document.getElementById('playlist-name');
+      const playlistDescription = document.getElementById('playlist-description');
+      const createButton = document.getElementById('create-button');
+      const nameChars = document.getElementById('name-chars');
+      const descChars = document.getElementById('desc-chars');
+      const status = document.getElementById('status');
+
+      // Initialize character counters on page load
+      window.addEventListener('load', function() {
+        nameChars.textContent = playlistNameInput.value.length;
+        descChars.textContent = playlistDescription.value.length;
+        createButton.disabled = playlistNameInput.value.length === 0;
+      });
+
+      // =====  UI  =====
+      // Toggle guide
+      function toggleGuide() {
+        const content = document.getElementById('guide-content');
+        const chevron = document.getElementById('guide-chevron');
+
+        // Toggle content visibility
+        if (content.style.maxHeight === '0px' || !content.style.maxHeight) {
+          content.style.maxHeight = content.scrollHeight + 'px';
+          chevron.classList.add('rotate-180');
+        } else {
+          content.style.maxHeight = '0px';
+          chevron.classList.remove('rotate-180');
+        }
+      }
+
+      // =====  Navigation  =====
+      // Navigates back to playlist manager view
+      function showPlaylistsManager() {
+        const button = document.querySelector('button');
+        const buttonText = button.querySelector('.button-text');
+        const spinner = button.querySelector('.spinner');
+
+        buttonText.classList.add('invisible');
+        spinner.classList.remove('hidden');
+        button.disabled = true;
+        button.classList.add('opacity-90', 'cursor-not-allowed');
+
+        google.script.run
+          .withSuccessHandler(() => {
+            buttonText.classList.remove('invisible');
+            spinner.classList.add('hidden');
+          })
+          .showPlaylistsManager();
+      }
+
+      // =====  Event Listeners  =====
+      // Handle playlist name input
+      playlistNameInput.addEventListener('input', function(e) {
+        const length = e.target.value.length;
+        nameChars.textContent = length;
+
+        // Enable/disable create button based on name input
+        createButton.disabled = length === 0;
+
+        // Optional: Add visual feedback for max length
+        if (length === 100) {
+          nameChars.classList.add('text-amber-500');
+        } else {
+          nameChars.classList.remove('text-amber-500');
+        }
+      });
+
+      // Handle description input
+      playlistDescription.addEventListener('input', function(e) {
+        const length = e.target.value.length;
+        descChars.textContent = length;
+
+        // Optional: Add visual feedback for max length
+        if (length === 300) {
+          descChars.classList.add('text-amber-500');
+        } else {
+          descChars.classList.remove('text-amber-500');
+        }
+      });
+
+      // Handle form submission
+      playlistForm.addEventListener('submit', function(e) {
+        e.preventDefault();
+
+        // Disable form controls
+        createButton.disabled = true;
+        createButton.classList.add('opacity-50');
+        playlistNameInput.disabled = true;
+        playlistDescription.disabled = true;
+
+        // Show loading status
+        status.textContent = 'Creating playlist...';
+        status.classList.remove('hidden', 'text-red-600', 'text-green-600');
+        status.classList.add('text-blue-600');
+
+        google.script.run
+          .withSuccessHandler(function(result) {
+            // Show success message
+            status.textContent = 'Playlist created successfully!';
+            status.classList.remove('text-blue-600');
+            status.classList.add('text-green-600');
+
+            // Close dialog after delay
+            setTimeout(() => google.script.run.showPlaylistsManager(), 2000);
+          })
+          .withFailureHandler(function(error) {
+            // Show error message
+            status.textContent = `Error: ${error}`;
+            status.classList.remove('text-blue-600');
+            status.classList.add('text-red-600');
+
+            // Re-enable form controls
+            createButton.disabled = false;
+            createButton.classList.remove('opacity-50');
+            playlistNameInput.disabled = false;
+            playlistDescription.disabled = false;
+          })
+          .createPlaylist(
+            playlistNameInput.value.trim(),
+            playlistDescription.value.trim()
+          );
+      });
+    </script>
+  </body>
+</html>

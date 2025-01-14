@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <script src="https://cdn.tailwindcss.com"></script>
+  </head>
+  <body class="text-sm">
+    <div class="p-4">
+      <!-- Header -->
+      <header class="mb-4">
+        <h1 class="text-lg font-bold text-gray-900">User Guide</h1>
+        <p class="text-gray-600">Welcome to Spotify Playlists Manager for Google Sheets. Easily manage, create and update your playlists directly from Google Sheets.</p>
+      </header>
+
+      <!-- Setup Card -->
+      <div class="bg-white rounded-lg p-4 border border-gray-200 mb-4">
+        <h2 class="font-bold text-gray-900 mb-3">Initial Setup</h2>
+        <ol class="space-y-2 text-gray-600 ml-4 list-disc">
+          <li>Open "🎵 Spotify Playlists Manager" custom menu</li>
+          <li>Click "🛠️ Setup Guide" to connect Spotify account to Google Sheets</li>
+          <li>Follow the prompts to authorize access for the app</li>
+          <li>Once connected, you can start managing playlists from Google sheets</li>
+        </ol>
+      </div>
+
+      <!-- Features -->
+      <div class="space-y-4">
+        <div class="bg-white p-4 rounded-lg border border-gray-200">
+          <h3 class="font-bold text-gray-900 mb-2">Playlists Summary</h3>
+          <p class="text-gray-600 mb-2">Get an overview of all your playlists including:</p>
+          <ul class="text-gray-600 ml-4 list-disc">
+            <li>Total tracks</li>
+            <li>Playlist owners</li>
+            <li>Quick access links</li>
+            <li>Privacy settings</li>
+          </ul>
+        </div>
+
+        <div class="bg-white p-4 rounded-lg border border-gray-200">
+          <h3 class="font-bold text-gray-900 mb-2">Import Tracks</h3>
+          <p class="text-gray-600 mb-2">Download tracks data from:</p>
+          <ul class="text-gray-600 ml-4 list-disc">
+            <li>Liked Songs library</li>
+            <li>Your personal playlists</li>
+            <li>Playlists you follow</li>
+            <li>Public playlists</li>
+          </ul>
+        </div>
+
+        <div class="bg-white p-4 rounded-lg border border-gray-200">
+          <h3 class="font-bold text-gray-900 mb-2">Update Playlists</h3>
+          <p class="text-gray-600 mb-2">Modify and manage your playlists from Google sheets:</p>
+          <ul class="text-gray-600 ml-4 list-disc">
+            <li>Add tracks using Track IDs</li>
+            <li>Remove tracks by deleting Track IDs</li>
+            <li>Reorder tracks by moving Track IDs</li>
+            <li>Bulk edit multiple playlists</li>
+          </ul>
+        </div>
+
+        <div class="bg-white p-4 rounded-lg border border-gray-200">
+          <h3 class="font-bold text-gray-900 mb-2">Create Playlists</h3>
+          <p class="text-gray-600 mb-2">Create new playlists easily:</p>
+          <ul class="text-gray-600 ml-4 list-disc">
+            <li>Name your playlist</li>
+            <li>Add an optional description</li>
+            <li>Add tracks from sheets</li>
+          </ul>
+        </div>
+      </div>
+
+      <!-- Note -->
+      <div class="mt-4 bg-gray-50 border-l-4 border-amber-400 p-3">
+        <p class="text-gray-600">
+          <span class="font-bold">Note:</span> Due to Spotify API limitations, algorithmic playlists and Spotify-owned editorial playlists are not supported.
+        </p>
+      </div>
+    </div>
+  </body>
+</html>
